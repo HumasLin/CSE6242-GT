@@ -1,0 +1,21 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf600
+{\fonttbl\f0\fmodern\fcharset0 CourierNewPSMT;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red255\green255\blue255;\red27\green31\blue35;
+}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;\cssrgb\c100000\c100000\c100000\c0;\cssrgb\c14148\c16111\c18054;
+}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\sl460\sa240\partightenfactor0
+
+\f0\fs40 \cf2 \cb3 \expnd0\expndtw0\kerning0
+i.rows: 47\
+\pard\pardeftab720\sl460\sa240\partightenfactor0
+\cf2 \cb3 ii.columns: 5      \cf2 \cb3 \
+iii.function: ngram-fingerprint\
+iv.GREL_brandname: \cf4 \cb3 if(value == null\cf4 \cb3 , "Unbranded"\cf4 \cb3 , value)\
+\pard\pardeftab720\sl460\partightenfactor0
+\cf2 \cb3 v.GREL_highpriced: \cf4 \cb3 if(toNumber(value) > 100 ,"1","0")\
+\
+\cf2 \cb3 vi.GREL_hasoffer: \cf4 \cb3 if(or(contains(toLowercase(value),"discount"),contains(toLowercase(value),"offer"),contains(toLowercase(value),"sale")),"1","0")\cf2 \cb3 \
+}

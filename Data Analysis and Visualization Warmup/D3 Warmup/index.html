@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Lego Sets by Year from Rebrickable</title>
+        <script type="text/javascript" src="lib/d3/d3.min.js"></script>
+        <style type = "text/css">
+            
+            div.bar
+            {
+                display: inline-block;
+                width: 20px;
+                height: 75px;
+                background-color: teal;
+                margin-right: 2px;
+            }
+            .axis path{
+          		fill:none;
+          		stroke : black;
+          		shape-rendering:crispEdges;
+     	    }
+			.axis line {
+    			fill: none;
+    			stroke: black;
+    			shape-rendering: crispEdges;
+			}
+
+			.axis text {
+    			font-family: sans-serif;
+    			font-size: 11px;
+			}
+
+        </style>
+    </head>
+    <body>
+        <script type="text/javascript">
+      var w = 1000;
+			var h = 500;
+			var barPadding = 5;
+			var padding = 50;
+			
+
+      var dataset ;
+
+      var parseTime = d3.timeParse("%Y");
+
+      var formatTime = d3.timeFormat("%b %e");
+
+        	d3.csv("q3.csv").then(function(data) {
+
+        		console.log(data)
+        		
+        		data.forEach(element=> {
+        			element.running_total = element.running_total * 1.0
+        			element.year = parseTime(element.year);
+        		})
+
+        		dataset = data;
+
+        		var svg = d3.select("body")
+            				.append("svg")
+            				.attr("x", 0)
+            				.attr("y", 0)
+            				.attr("width", w)
+            				.attr("height", h + 150)
+                    .attr("transform", "translate(" + padding * 9 + ", " + padding * 4 + ")");
+
+            var tScale = d3.scaleTime()
+        				           .domain([d3.min(dataset,function(d){return d.year;}), d3.max(dataset, function(d){ return d.year; })])
+						               .range([padding, w - padding / 2]);
+				
+				    var yScale = d3.scaleLinear()
+        				           .domain([d3.min(dataset, function(d){return d. running_total;}),d3.max(dataset, function(d){return d. running_total;})])
+						               .range([0, h - padding]);
+
+				    var yScale2 = d3.scaleLinear()
+        				            .domain([d3.min(dataset, function(d){return d. running_total;}),d3.max(dataset, function(d){return d. running_total;})])
+						                .range([h - padding, 0]);
+
+				
+            	
+            svg.selectAll("rect")
+   					   .data(dataset)
+     				   .enter()
+     		       .append("rect")
+      	     	 .attr("x", function(d, i){
+      			   		return tScale(d.year);
+      			   	})
+     			   	 .attr("y", function(d){
+    					   return h - yScale(d.running_total) ;
+					      })
+
+     			   	 .attr("width", w / dataset.length - barPadding)	    			   	
+					     .attr("height", function(d) {
+    					   return yScale(d.running_total);  
+					     })
+					     .attr("fill", function(d) {
+    					   return "rgb(0, 0, " + Math.round(d.running_total / 35) + ")";
+    				   });     
+
+    				var xAxis = d3.axisBottom()
+							  .scale(tScale)
+            			      .ticks(d3.timeYear.every(3));    	           
+
+    				svg.append("g")
+    		       .call(d3.axisBottom)
+    		       .attr("transform", "translate(0," + h + ")")
+    		       .call(xAxis);
+
+    		        var yAxis = d3.axisLeft()
+              			      .scale(yScale2)
+               			      .ticks(dataset.length / 10);
+
+    				svg.append("g")
+  			       .attr("class", "axis")
+    	 	       .attr("transform", "translate(" + padding + ", " + padding + ")")
+   	 	   	     .call(yAxis);
+
+            svg.append("text")
+               .attr("x", (w / 2 + padding / 2))             
+               .attr("y", 0 + (padding)/2)
+               .attr("text-anchor", "middle")  
+               .style("font-size", "16px") 
+               .text("Lego Sets by Year from Rebrickable");
+
+            svg.append("text")             
+               .attr("transform","translate(" + (w - padding) + " ," + 
+                           (h + padding)  + ")")
+               .style("text-anchor", "middle")
+               .text("hlin374");
+
+    		
+   		 });
+
+       
+        </script>
+    </body>
+</html>
