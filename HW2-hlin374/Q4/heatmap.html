@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style type="text/css">
+body {
+  font: 10px sans-serif;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.tile {
+  shape-rendering: crispEdges;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+ 
+<body>
+
+
+<script src="../lib/d3.v5.min.js"></script>
+
+<div id="dataviz_selectbox"></div>
+<div id="mouse"></div>
+
+<script type="text/javascript">
+
+var margin = {top: 20, right: 90, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var dataset;
+
+var parseTime = d3.timeParse("%Y");
+    formatTime = d3.timeFormat("%b %e");
+
+var svg = d3.select("body").append("svg")
+.attr("width", width + margin.left + margin.right )
+.attr("height", height + margin.top + margin.bottom + 200)
+.append("g")
+.attr("transform", "translate(" + margin.left + "," + margin.top*3 + ")");
+
+d3.csv("earthquakes.csv").then(function(data) {
+
+    var neo_data = [];
+
+    data.forEach(function(d){
+      for (var key in d){
+        var obj = {};
+        if (key != "Category" & key != "States"){
+          obj.year = key;
+          obj.value = d[key];
+          obj.States = d.States;
+          obj.Category = d.Category;
+          neo_data.push(obj);
+        }
+      }
+    });
+
+updateMap("0 to 9")
+
+var choices = [{key: "0 to 9"},
+{key:"10 to 99"}, 
+{key:"100 to 499"},
+{key:"500 or above"}];
+
+var selectbox = d3.select("#dataviz_selectbox");
+selectbox
+.append("select")
+.attr("id", "selectbox")
+.attr("class", "select")
+.style("left", "240px")
+.style("top", "40px")
+.style("position", "absolute")
+.selectAll("option")
+.data(choices)
+.enter()
+.append("option")
+.attr("value", function(d) { return d.key; })
+.text(function(d,i) { return d.key; })
+
+function updateMap(key){
+
+  var selectstate = filterByCategory(key,neo_data);
+
+d3.select("svg").remove()
+
+var svg = d3.select("body").append("svg")
+.attr("width", width + margin.left + margin.right)
+.attr("height", height + margin.top + margin.bottom + 200)
+.append("g")
+.attr("transform", "translate(" + margin.left + "," + margin.top*3 + ")");
+
+var All_States = d3.map(selectstate, function(d){return d.States;}).keys().sort(d3.ascending)
+var All_Years = d3.map(selectstate, function(d){return d.year;}).keys().sort(d3.ascending)
+
+var x = d3.scaleBand().range([0, width])
+.domain(All_States)
+svg.append("g")
+.attr("transform", "translate(0," + height/2 + ")")
+.call(d3.axisBottom(x).tickSize(0))
+.attr("font-size", "10px")
+.select(".domain").remove()
+
+var y = d3.scaleBand().range([height/2, 0])
+.domain(All_Years)
+svg.append("g")
+.call(d3.axisLeft(y).tickSize(0))
+.attr("font-size", "15px")
+.select(".domain").remove()
+
+values = []
+
+    for (var i = 0; i < selectstate.length; i++){
+        values.push(Number(selectstate[i].value));
+      };
+
+  var colors = ['#ffffcc','#ffeda0','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c','#bd0026','#800026'];
+
+  var delta = Math.round((d3.max(values) - d3.min(values))/8);
+
+  console.log(d3.max(selectstate, function(d){return (d.value)}))
+  console.log(d3.max(values))
+
+  delta = delta * 1;
+
+  var legend_data=[d3.min(values), d3.min(values) + delta, d3.min(values) + delta * 2, d3.min(values) + delta * 3, d3.min(values) + delta * 4, d3.min(values) + delta * 5, d3.min(values) + delta * 6, d3.min(values) + delta * 7,d3.min(values) + delta * 8];
+
+var z = d3.scaleQuantile()
+    .range(colors)
+    .domain([d3.min(values),d3.max(values)]);
+
+  var tooltip = d3.select("#mouse")
+  .append("div")
+  .style("opacity", 0)
+  .attr("class", "tooltip")
+  .style("position","absolute")
+  .style("width", "230px")
+  .style("height", "10px")
+  .style("left", "500px")
+  .style("text-align","center")
+  .style("top","30px")
+  .style("border", "none")
+  .style("border-width", "0px")
+  .style("border-radius", "0px")
+  .style("padding", "10px")
+
+  var mouseover = function(d) {
+  tooltip
+    .style("opacity", 1)
+  d3.select(this)
+    .style("stroke", "none")
+}
+  var mousemove = function(d) {
+    tooltip
+      .html(d.States + "  " + d.year + ":  " + d.value)
+      .style("font-size", "20px")
+  }
+  var mouseleave = function(d) {
+    tooltip
+      .style("opacity", 0)
+    d3.select(this)
+      .style("stroke", "none")
+  }
+
+
+var heatmap = svg.selectAll()
+    .data(selectstate)
+    .enter()
+    .append("rect")
+      .attr("x", function(d) { return x(d.States) + 5})
+      .attr("y", function(d) { return y(d.year)})
+      .attr("rx", 4)
+      .attr("ry", 4)
+      .attr("width", x.bandwidth() / 1.1)
+      .attr("height", y.bandwidth() / 1.1)
+      .style("fill", function(d) {return z(d.value)} )
+      .style("stroke-width", 4)
+      .style("stroke", "none")
+      .style("opacity", 0.8)
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave)
+
+
+	Size=50;
+
+	var legend = svg.selectAll("legend").data(colors)
+    .enter().append("g").attr("class", "legend");
+
+  legend.append("rect")
+	.attr("x", function(d, i) { return margin.left + (Size+20) * i })
+	.attr("y", height - 120)
+	.attr("width", Size + 20)
+	.attr("height", Size/2)
+	.attr("fill", function(d, i) { return colors[i];});
+	
+  legend.append("text")
+	.attr("class", "mono")
+	.text(function(d,i){return legend_data[i]+" "; })
+	.attr("x", function(d, i) { return margin.left + (Size+20) * i + 25; })
+	.attr("y", height - 80)
+	.attr("font-size", "15px");
+
+	svg.append("text")
+	.attr("class", "caption")
+	.attr("x", margin.left)
+	.attr("y", height - 150)
+	.attr("fill", "#000")
+	.text("Count").attr("font-size", "20px");
+
+	svg.append("text")
+	.attr("x", (width / 2))             
+	.attr("y", -40)
+		.attr("text-anchor", "middle")  
+	.style("font-size", "25px") 
+	.text("Visualizing Earthquake Counts by State 2000-2015(M3+)");
+
+	svg.append("text")
+	.attr("x", (width / 6))             
+	.attr("y", -15)
+		.attr("text-anchor", "middle")  
+	.style("font-size", "15px") 
+	.text("Range of");
+
+}
+
+function filterByCategory(aim, nameArr) {
+    var result = []
+    for(var i = 0; i < nameArr.length; i++) {
+      if(nameArr[i].Category == aim)
+        result.push(nameArr[i])
+    }
+    return result
+}
+
+selectbox.on("change", function(){
+  var selectedvalue = d3.select(this)
+  .select("select")
+  .property("value");
+  key = selectedvalue;
+  updateMap(key);
+
+});
+
+
+});
+</script>

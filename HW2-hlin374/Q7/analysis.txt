@@ -1,0 +1,29 @@
+1. Ease to develop for developers
+
+     Tableau: Easiest. Developers can use it directly.  
+     D3: Hardest. Developers need to write codes in javascript which is not friendly at all.
+     Python: Moderate. Developers need to write codes but it’s easier and it's powerful too.
+
+2. Ease to maintain the visualization for developers (e.g., difficulty of the maintenance of the product as the requirements change, the data changes, the hosting platform changes, etc.)
+
+     Tableau: Easiest. Different versions can communicate.
+     D3: Hardest. Difference in versions will make the codes vary greatly.
+     Python: Moderate. Difference in versions will bring in new functions and codes also vary.
+
+3. Usability of visualization developed for end users
+
+     Tableau: Worst. If users don't buy it, their access is extremely limited.
+     D3: Best. With a well designed html, users can do many things.
+     Python: Moderate. Users need to use python to do more.
+ 
+4. Scalability of visualization to “large” datasets
+
+     Tableau: It's easy for it to visualize "large" datasets.
+     D3: DOM manipulations of large data can be very slow.
+     Python: The speed can't be ideal at all times.
+
+5. System requirements to run the visualization
+
+     Tableau: Install Tableau.
+     D3: Use browsers supporting JavaScript and W3C DOM API.
+     Python: Install python and import certain libraries.

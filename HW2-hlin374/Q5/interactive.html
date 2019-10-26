@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<style type="text/css">
+body {
+  font: 10px sans-serif;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.tile {
+  shape-rendering: crispEdges;
+}
+
+.line {
+    fill: none;
+    stroke;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+ 
+<body>
+
+
+<script src="../lib/d3.v5.min.js"></script>
+
+<div id="dataviz_selectbox"></div>
+<div id="mouse"></div>
+
+<script type="text/javascript">
+
+var margin = {top: 20, right: 90, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var dataset;
+
+var parseTime = d3.timeParse("%Y");
+    formatTime = d3.timeFormat("%b %e");
+
+var svg = d3.select("body").append("svg")
+.attr("width", width + margin.left + margin.right )
+.attr("height", height + margin.top + margin.bottom + 1000)
+.append("g")
+.attr("transform", "translate(" + margin.left + "," + margin.top * 3 + ")");
+
+d3.csv("state-year-earthquakes.csv").then(function(data) {
+
+    var ctn = d3.nest()
+    .key(function(d){return d.region;})
+    .key(function(d){return d.year})
+    .key(function(d){return d.state;})
+    .rollup(function(counts){ return d3.sum(counts, function(d){return d.count;});})
+    .entries(data);
+    
+    var all_regions = d3.map(data, function(d){return d.region;}).keys().sort(d3.ascending)
+
+    var nest = d3.nest()
+    .key(function(d){return d.region;})
+    .key(function(d){return d.year;})
+    .rollup(function(counts){
+    return d3.sum(counts, function(d){
+        return d.count;
+    });})
+    .entries(data);
+
+    var South = nest[0].values;
+    var West = nest[1].values;
+    var Northeast = nest[2].values;
+    var Midwest = nest[3].values;
+
+    South.forEach(element=> {
+      element.key = parseTime(element.key);
+    })
+    
+    West.forEach(element=> {
+      element.key = parseTime(element.key);
+    })
+
+    Northeast.forEach(element=> {
+      element.key = parseTime(element.key);
+    })
+
+    Midwest.forEach(element=> {
+      element.key = parseTime(element.key);
+    })
+
+    var south_value = []
+    for(var i = 0; i < South.length; i++){
+      south_value.push(South[i].value);
+    }
+
+    var west_value = []
+    for(var i = 0; i < West.length; i++){
+      west_value.push(West[i].value);
+    }
+
+    var northeast_value = []
+    for(var i = 0; i < Northeast.length; i++){
+      northeast_value.push(Northeast[i].value);
+    }
+
+    var midwest_value = []
+    for(var i = 0; i < Midwest.length; i++){
+      midwest_value.push(Midwest[i].value);
+    }
+
+    drawchart()
+   
+   function drawchart(){
+
+      d3.select("svg").remove()
+
+      var svg = d3.select("body").append("svg")
+      .attr("width", width + margin.left + margin.right )
+      .attr("height", height + margin.top + margin.bottom + 1000)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top * 3 + ")");
+
+      var wScale = d3.scaleTime()
+      .domain([d3.min(West,function(d){return d.key;}),
+      d3.max(West, function(d){return d.key; })])
+      .range([0, width]);
+
+      var wyScale = d3.scaleLinear()
+      .domain([0, d3.max(West, function(d,i){return d.value;})])
+      .range([height, 0]);
+
+      var tooltip = d3.select("#mouse")
+      .append("div")
+      .style("opacity", 0)
+      .attr("class", "tooltip")
+      .style("position","absolute")
+      .style("width", (width + 50) + "px")
+      .style("height", "10px")
+      .style("text-align","center")
+      .style("border", "none")
+      .style("border-width", "0px")
+      .style("border-radius", "0px")
+      .style("padding", "10px")
+
+      var mouseover = function(d) {
+      tooltip
+      .style("opacity", 1)
+      d3.select(this)
+      .style("stroke", "none")
+      .style("r", "10px")
+      .html(showbar(d.value, d.key, svg))
+      }
+
+      var mousemove = function(d) {
+      tooltip
+      }
+
+      var mouseleave = function(d) {
+      tooltip
+      .style("opacity", 0)
+      d3.select(this)
+      .style("r", "5px")
+      .style("stroke", "none")
+      .html(drawchart())
+      }
+      
+      var line_1 = d3.line()
+      .x(function(d,i) { return wScale(d.key); }) 
+      .y(function(d) { return wyScale(d.value); }) 
+
+      var line_2 = d3.line()
+      .x(function(d, i) { return wScale(d.key); }) 
+      .y(function(d) { return wyScale(d.value); })  
+
+      var line_3 = d3.line()
+      .x(function(d, i) { return wScale(d.key); }) 
+      .y(function(d) { return wyScale(d.value); })  
+
+      var line_4 = d3.line()
+      .x(function(d, i) { return wScale(d.key); }) 
+      .y(function(d) { return wyScale(d.value); }) 
+
+      svg.append("path")
+      .datum(South) 
+      .attr("class", "line") 
+      .attr("d", line_1)
+      .attr("stroke","#900C3F");
+
+      svg.append("path")
+      .datum(West) 
+      .attr("class", "line") 
+      .attr("d", line_2)
+      .attr("stroke","#C70039");
+
+      svg.append("path")
+      .datum(Northeast) 
+      .attr("class", "line") 
+      .attr("d", line_3)
+      .attr("stroke","#FF5733");
+      
+      svg.append("path")
+      .datum(Midwest) 
+      .attr("class", "line") 
+      .attr("d", line_4)
+      .attr("stroke","#FFC300");
+
+      svg.selectAll("circle_s")
+      .data(South)
+      .enter().append("circle") 
+      .attr("class", "dot") 
+      .attr("cx", function(d) { return wScale(d.key) })
+      .attr("cy", function(d) { return wyScale(d.value) })
+      .attr("fill", "#900C3F")
+      .attr("r", 5)
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave);
+
+      svg.selectAll("circle_w")
+      .data(West)
+      .enter().append("circle") 
+      .attr("class", "dot") 
+      .attr("cx", function(d) { return wScale(d.key) })
+      .attr("cy", function(d) { return wyScale(d.value) })
+      .attr("r", 5)
+      .attr("fill", "#FF5733")
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave);
+
+      svg.selectAll("circle_ne")
+      .data(Northeast)
+      .enter().append("circle") 
+      .attr("class", "dot") 
+      .attr("cx", function(d) { return wScale(d.key) })
+      .attr("cy", function(d) { return wyScale(d.value) })
+      .attr("r", 5)
+      .attr("fill", "#C70039")
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave);
+
+      svg.selectAll("circle_mw")
+      .data(Midwest)
+      .enter().append("circle") 
+      .attr("class", "dot") 
+      .attr("cx", function(d) { return wScale(d.key) })
+      .attr("cy", function(d) { return wyScale(d.value) })
+      .attr("r", 5)
+      .attr("fill", "#FFC300")
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave);;
+      
+      svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(wScale));
+
+      svg.append("g")
+      .attr("class", "y axis")
+      .call(d3.axisLeft(wyScale));
+
+      svg.append("text")
+      .attr("x", (width / 2))             
+      .attr("y", 0)
+      .attr("text-anchor", "middle")  
+      .style("font-size", "25px") 
+      .text("US Earthquakes by Region 2010-2015");
+
+      var legend_colors = ['#FFC300', '#C70039', '#900C3F', '#FF5733']
+
+      var lineLegend = svg.selectAll(".lineLegend").data(all_regions)
+      .enter().append("g")
+      .attr("class","lineLegend")
+      .attr("transform", function (d,i) {
+      return "translate(" + width + "," + (i*20)+")";
+      });
+
+      lineLegend.append("text").text(function (d) {return d;})
+      .attr("transform", "translate(-150,20)"); 
+
+      lineLegend.append("circle")
+      .attr("fill", function (d, i) {return legend_colors[i]; })
+      .attr("r", 5)
+      .attr("transform", "translate(-160,17)"); 
+
+    }
+
+    function showbar(region,year,svg){
+
+      region = region.toString()
+
+      year = ((year+1).slice(11,15))
+
+     if(year == "2010"){
+        var j = 0
+      }
+      if(year == "2011"){
+        var j = 1
+      }
+      if(year == "2012"){
+        var j = 2
+      }
+      if(year == "2013"){
+        var j = 3
+      }
+      if(year == "2014"){
+        var j = 4
+      }
+      if(year == "2015"){
+        var j = 5
+      }
+      if(region == south_value[j]){
+          var i = 0
+          var region = "South"
+      }
+      if(region == west_value[j]){
+          var i = 1
+          var region = "West"
+      }
+      if(region == northeast_value[j]) {
+          var i = 2
+          var region = "Northeast"
+      }
+      if(region == midwest_value[j]){
+          var i = 3
+          var region = "Midwest"
+      }
+      var statesof = ctn[i];
+
+      var yearof = statesof.values[j].values;
+      yearof = yearof.sort(function (a,b) {
+        return d3.ascending(a.value, b.value) || d3.ascending(a.key, b.key); 
+      });
+
+      var all_state = d3.map(yearof, function(d){return d.key}).keys()
+
+      var xscale = d3.scaleLinear().range([0, width])
+      .domain([d3.min(yearof,function(d,i){return d.value;}),
+      d3.max(yearof, function(d){return d.value;})])
+      svg.append("g")
+      .attr("transform", "translate(" + 80 + "," + height * 2.2 + ")")
+      .call(d3.axisBottom(xscale).tickSize(0))
+      .attr("font-size", "10px")
+
+      var yscale = d3.scaleBand().range([height, 0])
+      .domain(all_state)
+      svg.append("g")
+      .attr("transform", "translate(" + 80 + "," + height * 1.2 + ")")
+      .call(d3.axisLeft(yscale).tickSize(5))
+      .attr("font-size", "15px")
+
+      svg.append("text")
+      .attr("x", width/2)             
+      .attr("y", 1.15*height)
+      .attr("text-anchor", "middle")  
+      .style("font-size", "16px") 
+      .text(region + "ern region in " + year);
+
+      var bars = svg.selectAll(".bar")
+      .data(yearof)
+      .enter()
+      .append("g")
+
+      bars.append("rect")
+      .attr("class", "bar")
+      .attr("y", function (d) {
+          return yscale(d.key);
+      })
+      .attr("height", yscale.bandwidth() - 5)
+      .attr("x", 0)
+      .attr("width", function (d) {return xscale(d.value);})
+      .attr("transform", "translate(" + 80 + "," + height * 1.2 + ")")    
+      .attr("fill","gray");    
+   
+    }
+
+  });
+
+</script>
