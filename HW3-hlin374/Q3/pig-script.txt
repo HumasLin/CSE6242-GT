@@ -1,0 +1,13 @@
+reviews = LOAD 's3://amazon-reviews-pds/tsv/*' As (marketplace:chararray,customer_id:chararray,review_id:chararray,product_id:chararray,product_parent:chararray,product_title:chararray,product_category:chararray,star_rating:float,helpful_votes:int,total_votes:int,vine:chararray,verified_purchase:chararray,review_headline:chararray,review_body:chararray,review_date:chararray);
+
+reviews = FILTER reviews by SIZE(review_body) >= 100 and total_votes >= 30 and verified_purchase == 'Y';
+
+cate_review = GROUP reviews by product_category;
+
+result = FOREACH cate_review GENERATE group, AVG(reviews.star_rating);
+
+sort = ORDER result BY $1 DESC, $0 ASC;
+
+sort = LIMIT sort 15;
+
+STORE sort INTO 's3://cse6242oan-2019fall-hlin374/output-big/' USING PigStorage('\t');
